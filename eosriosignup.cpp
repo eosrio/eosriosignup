@@ -3,7 +3,7 @@
 array<unsigned char,33> validate_key(string key_str) {
 
     eosio_assert(key_str.length() == 53, "PBK_N_53");
-
+Darius
     string pubkey_prefix("EOS");
 
     auto result = mismatch(pubkey_prefix.begin(), pubkey_prefix.end(), key_str.begin());
