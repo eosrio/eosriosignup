@@ -14,8 +14,7 @@ CONTRACT eosriosignup : public contract
 public:
    using contract::contract;
 
-   [[eosio::on_notify("eosio.token::transfer")]]
-   void process_transfer(name from, name to, asset quantity, std::string memo);
+   [[eosio::on_notify("eosio.token::transfer")]] void process_transfer(name from, name to, asset quantity, std::string memo);
 
 private:
    struct signup_public_key
@@ -23,21 +22,25 @@ private:
       uint8_t type;
       std::array<unsigned char, 33> data;
    };
+
    struct permission_level_weight
    {
       permission_level permission;
       uint16_t weight;
    };
+
    struct key_weight
    {
       signup_public_key key;
       uint16_t weight;
    };
+
    struct wait_weight
    {
       uint32_t wait_sec;
       uint16_t weight;
    };
+
    struct authority
    {
       uint32_t threshold;
@@ -72,7 +75,7 @@ private:
       EOSLIB_SERIALIZE(exchange_state, (supply)(base)(quote))
    };
 
-   typedef multi_index<name("rammarket"), exchange_state> rammarket_t;
+   typedef multi_index<"rammarket"_n, exchange_state> rammarket_t;
 
    std::array<unsigned char, 33> validate_key(std::string key_str)
    {
