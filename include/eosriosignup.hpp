@@ -4,6 +4,7 @@
 #include <eosio/symbol.hpp>
 #include <eosio/crypto.hpp>
 #include <eosio/contract.hpp>
+#include <eosio/print.hpp>
 #include <cstring>
 #include <constants.hpp>
 
@@ -80,15 +81,28 @@ private:
    std::array<unsigned char, 33> validate_key(std::string key_str)
    {
 
-      check(key_str.length() == 53, "PBK_N_53");
-
-      std::string pubkey_prefix("EOS");
-
-      auto result = mismatch(pubkey_prefix.begin(), pubkey_prefix.end(), key_str.begin());
-      check(result.first == pubkey_prefix.end(), "NON_EOS_PBK");
-
-      auto base58substr = key_str.substr(pubkey_prefix.length());
+      std::string pubkey_prefix;
+      std::string base58substr;
       std::vector<unsigned char> vch;
+
+      print_f("\n Key Length: %", key_str.length());
+
+      if (key_str.length() == 53)
+      {
+         pubkey_prefix = "EOS";
+         auto result = mismatch(pubkey_prefix.begin(), pubkey_prefix.end(), key_str.begin());
+         check(result.first == pubkey_prefix.end(), "NON_EOS_PBK");
+         base58substr = key_str.substr(pubkey_prefix.length());
+      }
+      else if (key_str.length() == 57)
+      {
+         pubkey_prefix = "PUB_";
+         auto result = mismatch(pubkey_prefix.begin(), pubkey_prefix.end(), key_str.begin());
+         check(result.first == pubkey_prefix.end(), "NON_PUB_PBK");
+         base58substr = key_str.substr(pubkey_prefix.length() + 3);
+      }
+
+      check(key_str.length() == 53 || key_str.length() == 57, "PBK_SIZE_ERR");
 
       check(decode_base58(base58substr, vch), "DEC_FAIL");
       check(vch.size() == 37, "INV_KEY");

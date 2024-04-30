@@ -1,4 +1,7 @@
 #include <eosriosignup.hpp>
+#include <eosio/print.hpp>
+#include <string>
+#include <vector>
 
 void eosriosignup::process_transfer(name from, name to, asset quantity, std::string memo)
 {
@@ -23,45 +26,55 @@ void eosriosignup::process_transfer(name from, name to, asset quantity, std::str
     check(quantity.is_valid(), "INV_TOK_TR");
     check(quantity.amount > 0, "Q_NEG");
 
-    memo.erase(memo.begin(), find_if(memo.begin(), memo.end(), [](int ch)
-                                     { return !isspace(ch); }));
+    // memo.erase(memo.begin(), find_if(memo.begin(), memo.end(), [](int ch)
+    //                                  { return !isspace(ch); }));
 
-    memo.erase(find_if(memo.rbegin(), memo.rend(), [](int ch)
-                       { return !isspace(ch); })
-                   .base(),
-               memo.end());
+    // memo.erase(find_if(memo.rbegin(), memo.rend(), [](int ch)
+    //                    { return !isspace(ch); })
+    //                .base(),
+    //            memo.end());
 
-    auto separator_pos = memo.find(' ');
-    if (separator_pos == std::string::npos)
+    print_f("\nMemo: %\n", memo);
+
+    std::vector<std::string> result;
+    size_t pos = 0;
+    std::string token;
+
+    while ((pos = memo.find('-')) != std::string::npos)
     {
-        separator_pos = memo.find('-');
+        token = memo.substr(0, pos);
+        result.push_back(token);
+        memo.erase(0, pos + 1); // +1 to skip the '-'
     }
-    check(separator_pos != std::string::npos, "SEP_FAIL");
+    result.push_back(memo); // Add the last part
+
+    // Print the split parts
+    for (const auto &part : result)
+    {
+        print_f("\nPART: %", part);
+    }
 
     // get account
-    std::string account_name_str = memo.substr(0, separator_pos);
+    std::string account_name_str = result[0];
     check(account_name_str.length() == 12, "ACC_SIZE_ERR");
     name new_account_name = name(account_name_str.c_str());
 
-    std::string keys_str = memo.substr(separator_pos + 1);
-
-    separator_pos = keys_str.find(' ');
-    if (separator_pos == std::string::npos)
-    {
-        separator_pos = keys_str.find('-');
-    }
-    check(separator_pos != std::string::npos, "SEP_FAIL");
-
-    std::string owner_key_str = keys_str.substr(0, separator_pos);
+    std::string owner_key_str;
     std::string active_key_str;
 
-    if ((separator_pos + 1) == std::string::npos)
+        if (result.size() == 3)
     {
-        active_key_str = owner_key_str;
+        owner_key_str = result[1];
+        active_key_str = result[2];
+    }
+    else if (result.size() == 2)
+    {
+        owner_key_str = result[1];
+        active_key_str = result[1];
     }
     else
     {
-        active_key_str = keys_str.substr(separator_pos + 1);
+        check(false, "WRONG_ARG_SIZE");
     }
 
     std::string pubkey_prefix("EOS");
